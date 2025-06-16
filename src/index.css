@@ -1,0 +1,112 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 151 55% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 151 55% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 151 55% 12%;
+
+    --primary: 151 55% 12%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 43 96% 56%;
+    --secondary-foreground: 151 55% 12%;
+
+    --muted: 151 15% 95%;
+    --muted-foreground: 151 15% 45%;
+
+    --accent: 43 96% 56%;
+    --accent-foreground: 151 55% 12%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 151 15% 90%;
+    --input: 151 15% 90%;
+    --ring: 151 55% 12%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 151 55% 12%;
+    --sidebar-primary: 151 55% 12%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 151 15% 95%;
+    --sidebar-accent-foreground: 151 55% 12%;
+    --sidebar-border: 151 15% 90%;
+    --sidebar-ring: 151 55% 12%;
+
+    /* Custom conservadora colors */
+    --conservadora-green: 151 55% 12%;
+    --conservadora-yellow: 43 96% 56%;
+    --conservadora-green-light: 151 30% 25%;
+    --conservadora-yellow-light: 43 96% 85%;
+  }
+
+  .dark {
+    --background: 151 55% 12%;
+    --foreground: 0 0% 100%;
+
+    --card: 151 55% 12%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 151 55% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 151 55% 12%;
+
+    --secondary: 151 30% 25%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 151 30% 25%;
+    --muted-foreground: 151 15% 65%;
+
+    --accent: 151 30% 25%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 151 30% 25%;
+    --input: 151 30% 25%;
+    --ring: 0 0% 100%;
+    --sidebar-background: 151 55% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 151 55% 12%;
+    --sidebar-accent: 151 30% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 151 30% 25%;
+    --sidebar-ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-white text-foreground font-sans;
+  }
+}
+
+/* Custom gradient backgrounds */
+.conservadora-gradient {
+  background: linear-gradient(135deg, hsl(var(--conservadora-green)) 0%, hsl(var(--conservadora-green-light)) 100%);
+}
+
+.conservadora-yellow-gradient {
+  background: linear-gradient(135deg, hsl(var(--conservadora-yellow)) 0%, hsl(var(--conservadora-yellow-light)) 100%);
+}
