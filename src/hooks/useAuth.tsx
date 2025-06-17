@@ -1,62 +1,103 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { apiClient } from '@/lib/apiClient';
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'https://dilgvrclnyvfboaqhyey.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpbGd2cmNsbnl2ZmJvYXFoeWV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5ODk4MjYsImV4cCI6MjA2NDU2NTgyNn0.ygiRY5QeQXMd5hfGpUXnyQyFoQwmWS6VcotvSDGLuVc';
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
-
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+// Define a estrutura dos dados do usuário
+interface User {
+  id: string;
+  email: string;
+  role: string;
 }
 
+// Define a estrutura da resposta que o backend envia no login
+interface AuthResponse {
+    token: string;
+    user: User;
+}
+
+// Define tudo que o nosso Contexto de Autenticação vai fornecer para a aplicação
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+}
+
+// Cria o Contexto
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Cria o Provedor, que é o componente que vai "abraçar" a aplicação
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Começa carregando
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+  // Função para verificar se existe um token válido no navegador
+  const checkAuth = useCallback(async () => {
+    setLoading(true);
+    const token = localStorage.getItem('authToken');
+    
+    if (token) {
+      try {
+        // Se tem token, vai no backend na rota '/me' para validar
+        // e pegar os dados atualizados do usuário.
+        const userData = await apiClient.get<User>('/me');
+        setUser(userData);
+      } catch (error) {
+        // Se o token for inválido (expirado, etc), limpa tudo.
+        console.error("Falha na autenticação com token:", error);
+        localStorage.removeItem('authToken');
+        setUser(null);
       }
-    );
-
-    return () => subscription.unsubscribe();
+    }
+    setLoading(false); // Termina o carregamento
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+  // Roda a verificação de autenticação assim que o app carrega
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // Função de Login
+  const login = async (email: string, password: string) => {
+    // Chama a rota de login no backend
+    const response = await apiClient.post<AuthResponse, any>('/auth/login', { email, password });
+    if (response.token && response.user) {
+        // Se o login der certo, salva o token e os dados do usuário
+        localStorage.setItem('authToken', response.token);
+        setUser(response.user);
+    }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  // Função de Logout
+  const logout = () => {
+    // Limpa o token e os dados do usuário
+    localStorage.removeItem('authToken');
     setUser(null);
+    // Manda o usuário de volta pra tela de login
+    window.location.href = '/login';
+  };
+
+  // Monta o objeto com tudo que o Provedor vai oferecer
+  const value = { 
+      user, 
+      login, 
+      logout, 
+      loading,
+      isAuthenticated: !!user // 'isAuthenticated' é true se 'user' não for nulo
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+// Hook customizado para facilitar o uso do contexto em outros componentes
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth deve ser usado dentro do AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
   return context;
-}
+};
